@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestão de Estampagem DTF</title>
+<meta name="description" content="Gestão de orçamentos, encomendas e compras para estúdio de estampagem DTF">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15171a">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gestão DTF">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15171a;
+    --ink-soft:#202327;
+    --paper:#f5f2ea;
+    --card:#ffffff;
+    --line:#e3ddce;
+    --orange:#d9541f;
+    --teal:#177a7c;
+    --amber:#c98a1a;
+    --green:#3f8f52;
+    --red:#c1443a;
+    --blue:#3b6ea5;
+    --text:#1c1c1a;
+    --text-soft:#726d61;
+    --mono:'IBM Plex Mono', monospace;
+    --display:'Oswald', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:var(--body);
+    background:var(--paper);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  #root{min-height:100vh;}
+  ::selection{background:var(--orange); color:#fff;}
+
+  /* --- regmark signature element --- */
+  .regmark{display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; flex:none;}
+  .regmark svg{width:100%; height:100%; display:block;}
+
+  /* --- shell --- */
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{
+    width:222px; flex:none; background:var(--ink); color:#e8e6df;
+    display:flex; flex-direction:column; padding:22px 16px;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:9px; padding:2px 6px 22px 6px; border-bottom:1px solid #333640; margin-bottom:18px;}
+  .brand-title{font-family:var(--display); font-size:16.5px; letter-spacing:.04em; font-weight:600; color:#fff; line-height:1.15;}
+  .brand-sub{font-family:var(--mono); font-size:10px; color:#8b8a83; letter-spacing:.06em; margin-top:2px;}
+
+  .nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:6px;
+    color:#c7c5bc; font-size:13.5px; font-weight:500; cursor:pointer; border:none; background:none;
+    text-align:left; width:100%; font-family:var(--body); transition:background .12s, color .12s;
+  }
+  .nav-item:hover{background:#24262c; color:#fff;}
+  .nav-item.active{background:var(--orange); color:#fff;}
+  .nav-count{margin-left:auto; font-family:var(--mono); font-size:10.5px; color:#96948b; background:#2a2d34; padding:1px 6px; border-radius:9px;}
+  .nav-item.active .nav-count{background:rgba(255,255,255,.22); color:#fff;}
+
+  .sidebar-foot{margin-top:auto; padding-top:14px; border-top:1px solid #333640; font-family:var(--mono); font-size:10px; color:#6f6d66; line-height:1.6;}
+  .sidebar-user{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #2c2e34;}
+  .sidebar-user-name{color:#c7c5bc; cursor:pointer; text-transform:none; font-size:11px;}
+  .sidebar-user-name:hover{color:#fff; text-decoration:underline;}
+  .sidebar-logout{background:none; border:none; color:#8b8a83; font-family:var(--mono); font-size:9.5px; cursor:pointer; text-transform:uppercase; letter-spacing:.04em;}
+  .sidebar-logout:hover{color:var(--orange);}
+
+  /* --- login screen --- */
+  .login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--ink); padding:20px;}
+  .login-card{background:#fff; border-radius:14px; padding:34px 30px; width:100%; max-width:360px; box-shadow:0 24px 60px rgba(0,0,0,.4);}
+  .login-brand{display:flex; align-items:center; gap:9px; margin-bottom:22px;}
+  .login-title{font-family:var(--display); font-size:19px; font-weight:600;}
+  .login-sub{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); margin-top:2px;}
+  .login-error{background:#f8e6e3; color:var(--red); font-size:12.5px; padding:9px 11px; border-radius:6px; margin-bottom:14px; font-family:var(--body);}
+  .login-field{display:flex; flex-direction:column; gap:5px; margin-bottom:14px;}
+  .login-field label{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-soft);}
+  .login-field input{font-family:var(--body); font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:7px; outline:none;}
+  .login-field input:focus{border-color:var(--orange);}
+
+  .backup-section{border-top:1px solid var(--line); padding-top:14px; margin-top:4px; display:flex; flex-direction:column; gap:8px;}
+  .backup-section > label{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-soft);}
+  .backup-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .backup-import-btn{cursor:pointer; display:inline-flex; align-items:center;}
+
+  .brand-logo{max-width:100%; max-height:34px; object-fit:contain; display:block;}
+  .brand-edit{margin-left:auto; background:none; border:none; color:#6f6d66; cursor:pointer; font-size:12px; padding:4px; border-radius:4px; flex:none;}
+  .brand-edit:hover{background:#24262c; color:#fff;}
+  .logo-upload{
+    border:1.5px dashed var(--line); border-radius:8px; padding:14px; text-align:center; cursor:pointer;
+    background:#faf8f3; display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .logo-upload:hover{border-color:var(--orange);}
+  .logo-upload img{max-width:100%; max-height:70px; object-fit:contain;}
+  .logo-upload .placeholder{font-family:var(--mono); font-size:11px; color:var(--text-soft);}
+  .logo-remove{font-family:var(--mono); font-size:10.5px; color:var(--red); background:none; border:none; cursor:pointer; text-decoration:underline;}
+
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 34px 18px 34px; border-bottom:1px solid var(--line);
+    background:var(--paper); position:sticky; top:0; z-index:5;
+  }
+  .topbar-left{display:flex; align-items:center; gap:10px;}
+  .page-title{font-family:var(--display); font-size:24px; font-weight:600; letter-spacing:.01em;}
+  .page-sub{font-family:var(--mono); font-size:11px; color:var(--text-soft); margin-top:3px; letter-spacing:.03em;}
+  .content{padding:26px 34px 60px 34px; flex:1;}
+
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:13px; border:none; border-radius:6px;
+    padding:10px 16px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    transition:transform .08s, background .12s; letter-spacing:.01em;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--orange); color:#fff;}
+  .btn-primary:hover{background:#c34817;}
+  .btn-ghost{background:transparent; color:var(--text); border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--text-soft);}
+  .btn-sm{padding:6px 10px; font-size:12px; border-radius:5px;}
+  .btn-icon{background:none; border:none; cursor:pointer; padding:5px; border-radius:5px; color:var(--text-soft);}
+  .btn-icon:hover{background:var(--line); color:var(--text);}
+  .btn-danger-text{color:var(--red);}
+
+  /* --- stat cards --- */
+  .stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:28px;}
+  .stat-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px;
+    position:relative;
+  }
+  .stat-card .regmark{position:absolute; top:10px; right:10px;}
+  .stat-label{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); letter-spacing:.05em; text-transform:uppercase;}
+  .stat-value{font-family:var(--display); font-size:28px; font-weight:600; margin-top:8px;}
+  .stat-value.orange{color:var(--orange);}
+  .stat-value.teal{color:var(--teal);}
+  .stat-value.red{color:var(--red);}
+  .stat-value.green{color:var(--green);}
+
+  /* --- section header --- */
+  .section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:14px; flex-wrap:wrap;}
+  .section-title{display:flex; align-items:center; gap:9px; font-family:var(--display); font-size:16px; font-weight:600;}
+  .search{
+    font-family:var(--body); font-size:13px; padding:8px 12px; border:1px solid var(--line);
+    border-radius:6px; background:#fff; width:220px; outline:none;
+  }
+  .search:focus{border-color:var(--orange);}
+
+  /* --- table --- */
+  .table-wrap{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  table{width:100%; border-collapse:collapse;}
+  thead th{
+    text-align:left; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--text-soft); padding:11px 16px; border-bottom:1px solid var(--line); background:#faf8f3;
+  }
+  tbody td{padding:13px 16px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#faf8f2;}
+  .cell-num{font-family:var(--mono); font-size:12.5px; color:var(--text-soft);}
+  .cell-by{font-family:var(--mono); font-size:11px; color:var(--text-soft);}
+  .cell-money{font-family:var(--mono); font-weight:600;}
+  .cell-actions{display:flex; gap:4px; justify-content:flex-end;}
+  .empty-row td{text-align:center; padding:40px 16px; color:var(--text-soft); font-size:13.5px;}
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.03em; padding:4px 9px; border-radius:20px; font-weight:600; text-transform:uppercase;
+  }
+  .badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+  .badge.grey{background:#eeece5; color:#7a766a;}
+  .badge.blue{background:#e6eef6; color:var(--blue);}
+  .badge.amber{background:#f8ecd6; color:var(--amber);}
+  .badge.teal{background:#e1f0ef; color:var(--teal);}
+  .badge.green{background:#e5f2e6; color:var(--green);}
+  .badge.red{background:#f8e6e3; color:var(--red);}
+
+  select.status-select{
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em; text-transform:uppercase;
+    padding:5px 8px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer;
+  }
+
+  /* --- modal --- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(21,23,26,.55); display:flex; align-items:flex-start;
+    justify-content:center; padding:40px 20px; overflow-y:auto; z-index:50;
+  }
+  .modal{
+    background:var(--card); border-radius:12px; width:100%; max-width:560px; padding:0;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--line);}
+  .modal-title{font-family:var(--display); font-size:18px; font-weight:600;}
+  .modal-body{padding:20px 24px; display:flex; flex-direction:column; gap:14px; max-height:65vh; overflow-y:auto;}
+  .modal-foot{padding:16px 24px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px;}
+
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-soft);}
+  .field input, .field select, .field textarea{
+    font-family:var(--body); font-size:13.5px; padding:9px 11px; border:1px solid var(--line);
+    border-radius:6px; outline:none; background:#fff; width:100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--orange);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .field textarea{resize:vertical; min-height:60px;}
+
+  .items-block{border:1px solid var(--line); border-radius:8px; padding:12px; background:#faf8f3;}
+  .item-row{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; margin-bottom:8px;}
+  .item-row input{font-family:var(--body); font-size:12.5px; padding:7px 8px; border:1px solid var(--line); border-radius:5px;}
+  .item-sub{font-family:var(--mono); font-size:12px; text-align:right; color:var(--text-soft);}
+  .item-remove{background:none; border:none; color:var(--red); cursor:pointer; font-size:16px; line-height:1;}
+  .items-total{display:flex; justify-content:flex-end; gap:10px; align-items:baseline; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);}
+  .items-total .label{font-family:var(--mono); font-size:11px; color:var(--text-soft); text-transform:uppercase;}
+  .items-total .val{font-family:var(--mono); font-size:17px; font-weight:600;}
+
+  .add-item-btn{font-family:var(--mono); font-size:11.5px; color:var(--teal); background:none; border:1px dashed var(--teal); border-radius:6px; padding:6px 10px; cursor:pointer; width:100%; text-align:center;}
+  .add-item-btn:hover{background:#e1f0ef;}
+
+  .hint{font-family:var(--mono); font-size:11px; color:var(--text-soft); background:#faf8f3; border:1px solid var(--line); border-radius:6px; padding:9px 11px;}
+
+  /* --- catalog panel --- */
+  .catalog-panels{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .catalog-panel{background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:0; overflow:hidden;}
+  .catalog-head{display:flex; align-items:center; gap:10px; padding:13px 16px; cursor:pointer;}
+  .catalog-head:hover{background:#faf8f3;}
+  .catalog-title{font-family:var(--display); font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;}
+  .catalog-count{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); background:#eeece5; padding:1px 7px; border-radius:9px;}
+  .catalog-chevron{margin-left:auto; color:var(--text-soft); font-size:11px; transition:transform .15s;}
+  .catalog-chevron.open{transform:rotate(180deg);}
+  .catalog-import-btn{margin-left:8px;}
+  .catalog-list{border-top:1px solid var(--line); max-height:260px; overflow-y:auto;}
+  .catalog-row{display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid var(--line); font-size:13px;}
+  .catalog-row:last-child{border-bottom:none;}
+  .catalog-row-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .catalog-row-ref{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); flex:none; width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .catalog-row-supplier{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); flex:none;}
+  .catalog-row-price{font-family:var(--mono); font-weight:600; flex:none; width:70px; text-align:right;}
+  .catalog-empty{padding:20px 16px; text-align:center; color:var(--text-soft); font-size:12.5px;}
+  .catalog-add-select{font-family:var(--body); font-size:12.5px; padding:8px 10px; border:1px dashed var(--teal); border-radius:6px; background:#e1f0ef; color:var(--teal); width:100%; margin-bottom:8px; cursor:pointer;}
+
+  .import-drop{border:1.5px dashed var(--line); border-radius:8px; padding:22px; text-align:center; cursor:pointer; background:#faf8f3;}
+  .import-drop:hover{border-color:var(--orange);}
+  .import-drop input{display:none;}
+  .import-drop .big{font-family:var(--display); font-size:14px; font-weight:600; margin-bottom:4px;}
+  .import-drop .small{font-family:var(--mono); font-size:11px; color:var(--text-soft);}
+  .import-preview{border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .import-preview table{width:100%; border-collapse:collapse; font-size:12px;}
+  .import-preview th{background:#faf8f3; text-align:left; padding:7px 9px; font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--text-soft); border-bottom:1px solid var(--line);}
+  .import-preview td{padding:7px 9px; border-bottom:1px solid var(--line); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;}
+  .import-preview tr:last-child td{border-bottom:none;}
+  .import-count{font-family:var(--mono); font-size:11.5px; color:var(--teal);}
+
+  /* --- client search-select --- */
+  .client-picker{position:relative;}
+  .client-picker-list{
+    position:absolute; top:calc(100% + 4px); left:0; right:0; background:#fff;
+    border:1px solid var(--line); border-radius:8px; max-height:220px; overflow-y:auto;
+    z-index:60; box-shadow:0 10px 24px rgba(0,0,0,.14);
+  }
+  .client-picker-item{padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--line);}
+  .client-picker-item:last-child{border-bottom:none;}
+  .client-picker-item:hover, .client-picker-item.active{background:#faf8f3;}
+  .client-picker-name{font-size:13px; font-weight:500;}
+  .client-picker-sub{font-family:var(--mono); font-size:10.5px; color:var(--text-soft); margin-top:2px;}
+  .client-picker-empty{padding:12px; text-align:center; font-size:12px; color:var(--text-soft);}
+
+  .toast{
+    position:fixed; bottom:22px; right:22px; background:var(--ink); color:#fff; padding:12px 18px;
+    border-radius:8px; font-size:13px; font-family:var(--body); z-index:100; box-shadow:0 8px 24px rgba(0,0,0,.3);
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--orange);}
+
+  .loading{display:flex; align-items:center; justify-content:center; height:60vh; font-family:var(--mono); font-size:12px; color:var(--text-soft);}
+
+  .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .table-wrap table{min-width:640px;}
+
+  .item-row-meta{display:grid; grid-template-columns:62px 90px 90px 30px; gap:8px; align-items:center;}
+
+  .mobile-config-item{display:none;}
+
+  @media (max-width:860px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .field-row{grid-template-columns:1fr;}
+  }
+
+  @media (max-width:700px){
+    body{padding-bottom:0;}
+    .shell{flex-direction:column;}
+    .sidebar{
+      position:fixed; top:auto; bottom:0; left:0; right:0; width:100%; height:auto;
+      flex-direction:row; align-items:stretch; padding:6px 4px calc(6px + env(safe-area-inset-bottom)) 4px;
+      border-top:1px solid #2c2e34; z-index:20; gap:0;
+    }
+    .brand{display:none;}
+    .nav{flex-direction:row; flex:1; gap:2px; overflow-x:auto;}
+    .nav-item{flex:1; flex-direction:column; gap:3px; padding:7px 2px; font-size:9.5px; text-align:center; border-radius:8px; white-space:nowrap;}
+    .nav-item .nav-count{margin-left:0; font-size:9px; padding:0 5px;}
+    .sidebar-foot{display:none;}
+    .mobile-config-item{display:flex;}
+
+    .main{padding-bottom:70px;}
+    .topbar{flex-direction:column; align-items:stretch; gap:10px; padding:16px 16px 14px 16px;}
+    .topbar .btn-primary{width:100%; justify-content:center;}
+    .page-title{font-size:20px;}
+    .content{padding:16px;}
+    .section-head{flex-direction:column; align-items:stretch;}
+    .search{width:100%;}
+    .stats{grid-template-columns:repeat(2,1fr); gap:10px;}
+    .stat-card{padding:13px 14px;}
+    .stat-value{font-size:22px;}
+
+    .overlay{padding:0; align-items:flex-end;}
+    .modal{max-width:100%; border-radius:16px 16px 0 0; max-height:92vh; display:flex; flex-direction:column;}
+    .modal-body{max-height:none; flex:1;}
+
+    .item-row{grid-template-columns:1fr; row-gap:8px;}
+    .item-row-meta{grid-template-columns:1fr 1fr 1fr 24px; gap:6px;}
+    .item-row-meta input{padding:7px 6px; font-size:12px;}
+    .item-sub{text-align:left; font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="text/babel">
+const {useState, useEffect, useMemo, useCallback, useRef} = React;
+
+function RegMark({color1="#d9541f", color2="#177a7c"}){
+  return (
+    <span className="regmark">
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.2" stroke={color1} strokeWidth="1"/>
+        <line x1="8" y1="0.5" x2="8" y2="4.2" stroke={color2} strokeWidth="1"/>
+        <line x1="8" y1="11.8" x2="8" y2="15.5" stroke={color2} strokeWidth="1"/>
+        <line x1="0.5" y1="8" x2="4.2" y2="8" stroke={color2} strokeWidth="1"/>
+        <line x1="11.8" y1="8" x2="15.5" y2="8" stroke={color2} strokeWidth="1"/>
+      </svg>
+    </span>
+  );
+}
+
+function LoginScreen({config, onLogin}){
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [nome, setNome] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if(!nome.trim()){ setError('Indica o teu nome, para sabermos quem está a usar a app.'); return; }
+    if(username !== config.loginUsername || password !== config.loginPassword){
+      setError('Utilizador ou password incorretos.');
+      return;
+    }
+    setError('');
+    onLogin(nome.trim());
+  };
+
+  return (
+    <div className="login-screen">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <div className="login-brand">
+          <RegMark/>
+          <div>
+            <div className="login-title">{config.nomeEmpresa || 'Gestão DTF'}</div>
+            <div className="login-sub">ACESSO DA EQUIPA</div>
+          </div>
+        </div>
+        {error && <div className="login-error">{error}</div>}
+        <div className="login-field">
+          <label>Utilizador</label>
+          <input value={username} onChange={e=>setUsername(e.target.value)} autoFocus />
+        </div>
+        <div className="login-field">
+          <label>Password</label>
+          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+        </div>
+        <div className="login-field">
+          <label>O teu nome</label>
+          <input value={nome} onChange={e=>setNome(e.target.value)} placeholder="Para identificar o que crias na app" />
+        </div>
+        <button type="submit" className="btn btn-primary" style={{width:'100%', justifyContent:'center'}}>Entrar</button>
+      </form>
+    </div>
+  );
+}
+
+const money = (n) => (Number(n)||0).toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
+const fmtDate = (d) => { if(!d) return '—'; const dt = new Date(d+'T00:00:00'); return dt.toLocaleDateString('pt-PT', {day:'2-digit', month:'2-digit', year:'numeric'}); };
+const todayStr = () => new Date().toISOString().slice(0,10);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+
+const ORC_STATUS = {
+  rascunho: {label:'Rascunho', cls:'grey'},
+  enviado: {label:'Enviado', cls:'blue'},
+  aprovado: {label:'Aprovado', cls:'green'},
+  rejeitado: {label:'Rejeitado', cls:'red'},
+};
+const ENC_STATUS = {
+  fila: {label:'Em fila', cls:'grey'},
+  producao: {label:'Em produção', cls:'amber'},
+  pronta: {label:'Pronta', cls:'teal'},
+  entregue: {label:'Entregue', cls:'green'},
+};
+const PAGAMENTO_STATUS = {
+  pendente: {label:'Pendente', cls:'red'},
+  pago: {label:'Pago', cls:'green'},
+};
+const COMPRA_CATEGORIAS = ['Têxtil', 'Filme DTF', 'Brindes'];
+const COMPRA_ESTADO = {
+  pendente: {label:'Pendente', cls:'red'},
+  pago: {label:'Pago', cls:'green'},
+};
+
+// Usa o armazenamento partilhado do Claude quando disponível (dentro do claude.ai).
+// Fora daí (app instalada a partir deste pacote), usa o armazenamento local do próprio telemóvel/navegador —
+// os dados ficam guardados nesse aparelho, mas deixam de ser partilhados automaticamente com o resto da equipa.
+const HAS_CLAUDE_STORAGE = typeof window !== 'undefined' && !!window.storage;
+const LS_PREFIX = 'gestao-dtf:';
+
+async function loadKey(key, fallback){
+  if(HAS_CLAUDE_STORAGE){
+    try{
+      const res = await window.storage.get(key, true);
+      return res && res.value ? JSON.parse(res.value) : fallback;
+    }catch(e){ return fallback; }
+  }
+  try{
+    const raw = localStorage.getItem(LS_PREFIX+key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+async function saveKey(key, value){
+  if(HAS_CLAUDE_STORAGE){
+    try{ await window.storage.set(key, JSON.stringify(value), true); }
+    catch(e){ console.error('Erro ao guardar', key, e); }
+    return;
+  }
+  try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(value)); }
+  catch(e){ console.error('Erro ao guardar', key, e); }
+}
+
+function App(){
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('dashboard');
+  const [clients, setClients] = useState([]);
+  const [quotes, setQuotes] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [catalog, setCatalog] = useState([]);
+  const [modal, setModal] = useState(null); // {type, data}
+  const [toast, setToast] = useState(null);
+  const [search, setSearch] = useState('');
+  const [config, setConfig] = useState({logo:null, logoW:0, logoH:0, nomeEmpresa:'', morada:'', telefone:'', email:'', nif:'', loginUsername:'', loginPassword:''});
+
+  const [authed, setAuthed] = useState(() => { try{ return localStorage.getItem('gestao-dtf:session-authed') === 'true'; }catch(e){ return false; } });
+  const [currentUser, setCurrentUser] = useState(() => { try{ return localStorage.getItem('gestao-dtf:session-username') || ''; }catch(e){ return ''; } });
+
+  useEffect(() => {
+    (async () => {
+      const [c,q,o,cfg,pu,cat] = await Promise.all([
+        loadKey('clients', []),
+        loadKey('quotes', []),
+        loadKey('orders', []),
+        loadKey('config', {logo:null, logoW:0, logoH:0, nomeEmpresa:'', morada:'', telefone:'', email:'', nif:'', loginUsername:'', loginPassword:''}),
+        loadKey('purchases', []),
+        loadKey('catalog', []),
+      ]);
+      setClients(c); setQuotes(q); setOrders(o); setConfig(cfg); setPurchases(pu); setCatalog(cat);
+      setLoading(false);
+    })();
+  }, []);
+
+  const saveConfig = (next) => { setConfig(next); saveKey('config', next); };
+
+  const exportAllData = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      clients, quotes, orders, purchases, catalog,
+      config: { ...config, loginUsername:'', loginPassword:'' },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gestao-estampagem-backup-${todayStr()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Ficheiro de backup descarregado');
+  };
+
+  const importAllData = (file) => {
+    const reader = new FileReader();
+    reader.onerror = () => alert('Não foi possível ler este ficheiro.');
+    reader.onload = (ev) => {
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data || typeof data !== 'object') throw new Error('formato inválido');
+        if(!confirm('Isto vai substituir TODOS os dados atuais (clientes, orçamentos, encomendas, compras, catálogo) pelos dados deste ficheiro. Continuar?')) return;
+        persist.clients(Array.isArray(data.clients) ? data.clients : []);
+        persist.quotes(Array.isArray(data.quotes) ? data.quotes : []);
+        persist.orders(Array.isArray(data.orders) ? data.orders : []);
+        persist.purchases(Array.isArray(data.purchases) ? data.purchases : []);
+        persist.catalog(Array.isArray(data.catalog) ? data.catalog : []);
+        if(data.config && typeof data.config === 'object'){
+          saveConfig({ ...data.config, loginUsername: config.loginUsername, loginPassword: config.loginPassword });
+        }
+        showToast('Dados importados com sucesso');
+        setModal(null);
+      }catch(err){
+        console.error(err);
+        alert('Não foi possível importar este ficheiro. Confirma que é um backup exportado por esta app (.json).');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const loginEnabled = !!(config.loginUsername && config.loginPassword);
+
+  const doLogin = (nome) => {
+    setAuthed(true); setCurrentUser(nome);
+    try{ localStorage.setItem('gestao-dtf:session-authed', 'true'); localStorage.setItem('gestao-dtf:session-username', nome); }catch(e){}
+  };
+  const doLogout = () => {
+    setAuthed(false);
+    try{ localStorage.removeItem('gestao-dtf:session-authed'); }catch(e){}
+  };
+  const renameCurrentUser = () => {
+    const novo = prompt('O teu nome:', currentUser);
+    if(novo && novo.trim()){
+      setCurrentUser(novo.trim());
+      try{ localStorage.setItem('gestao-dtf:session-username', novo.trim()); }catch(e){}
+    }
+  };
+
+  const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(null), 2600); };
+
+  const persist = {
+    clients: (next) => { setClients(next); saveKey('clients', next); },
+    quotes: (next) => { setQuotes(next); saveKey('quotes', next); },
+    orders: (next) => { setOrders(next); saveKey('orders', next); },
+    purchases: (next) => { setPurchases(next); saveKey('purchases', next); },
+    catalog: (next) => { setCatalog(next); saveKey('catalog', next); },
+  };
+
+  const clientName = (id) => clients.find(c=>c.id===id)?.nome || '—';
+  const orderTotal = (o) => (o.itens||[]).reduce((s,i)=> s + (Number(i.quantidade)||0)*(Number(i.precoUnit)||0), 0);
+
+  // --- derived stats ---
+  const stats = useMemo(() => {
+    const orcPendentes = quotes.filter(q=>q.status==='enviado'||q.status==='rascunho').length;
+    const encProducao = orders.filter(o=>o.status==='producao'||o.status==='fila').length;
+    const porCobrar = orders.filter(o=>o.pagamento!=='pago').reduce((s,o)=>s+orderTotal(o),0);
+    const now = new Date(); const ym = now.toISOString().slice(0,7);
+    const receitaMes = orders.filter(o=>o.pagamento==='pago' && o.dataPagamento && o.dataPagamento.slice(0,7)===ym).reduce((s,o)=>s+orderTotal(o),0);
+    const despesasMes = purchases.filter(c=>c.data && c.data.slice(0,7)===ym).reduce((s,c)=>s+(Number(c.valor)||0),0);
+    const lucroMes = receitaMes - despesasMes;
+    return {orcPendentes, encProducao, porCobrar, receitaMes, despesasMes, lucroMes};
+  }, [quotes, orders, purchases]);
+
+  const filteredList = (arr, getSearchable) => {
+    if(!search.trim()) return arr;
+    const s = search.trim().toLowerCase();
+    return arr.filter(item => getSearchable(item).toLowerCase().includes(s));
+  };
+
+  // ---------- CRUD helpers ----------
+  const nextNumero = (arr, prefix) => `${prefix}-${String(arr.length+1).padStart(4,'0')}`;
+
+  const saveClient = (data) => {
+    if(data.id){
+      persist.clients(clients.map(c => c.id===data.id ? data : c));
+      showToast('Cliente atualizado');
+    } else {
+      persist.clients([...clients, {...data, id:uid(), criadoPor:currentUser||''}]);
+      showToast('Cliente adicionado');
+    }
+    setModal(null);
+  };
+  const deleteClient = (id) => {
+    if(!confirm('Eliminar este cliente? Os orçamentos/encomendas associados mantêm-se mas ficam sem cliente ligado.')) return;
+    persist.clients(clients.filter(c=>c.id!==id));
+    showToast('Cliente eliminado');
+  };
+
+  const saveQuote = (data) => {
+    if(data.id){
+      persist.quotes(quotes.map(q => q.id===data.id ? data : q));
+      showToast('Orçamento atualizado');
+    } else {
+      const numero = nextNumero(quotes, 'ORC');
+      persist.quotes([...quotes, {...data, id:uid(), numero, criadoPor:currentUser||''}]);
+      showToast('Orçamento criado');
+    }
+    setModal(null);
+  };
+  const deleteQuote = (id) => {
+    if(!confirm('Eliminar este orçamento?')) return;
+    persist.quotes(quotes.filter(q=>q.id!==id));
+    showToast('Orçamento eliminado');
+  };
+  const convertToOrder = (quote) => {
+    const numero = nextNumero(orders, 'ENC');
+    const newOrder = {
+      id:uid(), numero, clienteId:quote.clienteId, orcamentoId:quote.id,
+      itens:quote.itens, status:'fila', pagamento:'pendente', dataPagamento:'', notas:quote.notas||'', criadoPor:currentUser||'',
+    };
+    persist.orders([...orders, newOrder]);
+    persist.quotes(quotes.map(q => q.id===quote.id ? {...q, status:'aprovado'} : q));
+    showToast('Encomenda criada a partir do orçamento');
+    setView('encomendas');
+  };
+
+  const saveOrder = (data) => {
+    if(data.id){
+      persist.orders(orders.map(o => o.id===data.id ? data : o));
+      showToast('Encomenda atualizada');
+    } else {
+      const numero = nextNumero(orders, 'ENC');
+      persist.orders([...orders, {...data, id:uid(), numero, criadoPor:currentUser||''}]);
+      showToast('Encomenda criada');
+    }
+    setModal(null);
+  };
+  const deleteOrder = (id) => {
+    if(!confirm('Eliminar esta encomenda?')) return;
+    persist.orders(orders.filter(o=>o.id!==id));
+    showToast('Encomenda eliminada');
+  };
+  const setOrderStatus = (id, status) => {
+    persist.orders(orders.map(o => o.id===id ? {...o, status} : o));
+  };
+  const setOrderPagamento = (id, pagamento) => {
+    persist.orders(orders.map(o => o.id===id ? {...o, pagamento, dataPagamento: pagamento==='pago' ? todayStr() : ''} : o));
+  };
+
+  const savePurchase = (data) => {
+    if(data.id){
+      persist.purchases(purchases.map(c => c.id===data.id ? data : c));
+      showToast('Compra atualizada');
+    } else {
+      const numero = nextNumero(purchases, 'COMP');
+      persist.purchases([...purchases, {...data, id:uid(), numero, criadoPor:currentUser||''}]);
+      showToast('Compra registada');
+    }
+    setModal(null);
+  };
+  const deletePurchase = (id) => {
+    if(!confirm('Eliminar esta compra?')) return;
+    persist.purchases(purchases.filter(c=>c.id!==id));
+    showToast('Compra eliminada');
+  };
+
+  const importCatalogItems = (items) => {
+    const withIds = items.map(it => ({...it, id:uid()}));
+    persist.catalog([...catalog, ...withIds]);
+    showToast(`${items.length} produto${items.length!==1?'s':''} importado${items.length!==1?'s':''}`);
+    setModal(null);
+  };
+  const deleteCatalogItem = (id) => {
+    persist.catalog(catalog.filter(c=>c.id!==id));
+  };
+
+  const exportQuotePdf = (quote) => {
+    const client = clients.find(c=>c.id===quote.clienteId);
+    const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4'});
+    const left = 15, right = 195;
+    let y = 20;
+
+    // Logo + company block
+    let textX = left;
+    if(config.logo && config.logoW && config.logoH){
+      const fmt = config.logo.indexOf('image/png') !== -1 ? 'PNG' : 'JPEG';
+      const w = 28, h = w * (config.logoH/config.logoW);
+      try{ doc.addImage(config.logo, fmt, left, y-6, w, h); }catch(e){}
+      textX = left + w + 6;
+    }
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(20,20,20);
+    doc.text(config.nomeEmpresa || 'A tua empresa', textX, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(110,105,95);
+    let cy = y + 5;
+    [config.morada, [config.telefone, config.email].filter(Boolean).join('  ·  '), config.nif ? 'NIF '+config.nif : ''].filter(Boolean).forEach(line => {
+      doc.text(line, textX, cy); cy += 4;
+    });
+
+    // Title block, right aligned
+    doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(20,20,20);
+    doc.text('ORÇAMENTO', right, 20, {align:'right'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(90,90,90);
+    doc.text(quote.numero, right, 26, {align:'right'});
+    doc.text('Data: ' + fmtDate(quote.data), right, 31, {align:'right'});
+    if(quote.validade) doc.text('Válido até: ' + fmtDate(quote.validade), right, 36, {align:'right'});
+
+    y = Math.max(cy, 40) + 4;
+    doc.setDrawColor(220,214,198); doc.line(left, y, right, y);
+    y += 9;
+
+    // Client
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(140,90,50);
+    doc.text('CLIENTE', left, y); y += 5.5;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20,20,20);
+    doc.text(client ? client.nome : '—', left, y); y += 5;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+    [client && client.contacto, client && client.telefone, client && client.email].filter(Boolean).forEach(line => { doc.text(line, left, y); y += 4.5; });
+    y += 5;
+
+    // Items table
+    const colDesc = left, colQty = 140, colUnit = 165, colSub = right;
+    doc.setFillColor(246, 243, 234);
+    doc.rect(left, y, right-left, 8, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(90,90,90);
+    doc.text('DESCRIÇÃO', colDesc+2, y+5.5);
+    doc.text('QTD', colQty, y+5.5, {align:'right'});
+    doc.text('PREÇO UN.', colUnit, y+5.5, {align:'right'});
+    doc.text('SUBTOTAL', colSub, y+5.5, {align:'right'});
+    y += 8;
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(30,30,30);
+    let total = 0;
+    (quote.itens||[]).forEach((it, idx) => {
+      const qty = Number(it.quantidade)||0, unit = Number(it.precoUnit)||0, sub = qty*unit;
+      total += sub;
+      const descLines = doc.splitTextToSize(it.descricao || '—', colQty - colDesc - 6);
+      const rowH = Math.max(7, descLines.length*4.5 + 2.5);
+      if(y + rowH > 275){ doc.addPage(); y = 20; }
+      if(idx % 2 === 1){ doc.setFillColor(250, 248, 243); doc.rect(left, y, right-left, rowH, 'F'); }
+      doc.text(descLines, colDesc+2, y+5);
+      doc.text(String(qty), colQty, y+5, {align:'right'});
+      doc.text(money(unit), colUnit, y+5, {align:'right'});
+      doc.text(money(sub), colSub, y+5, {align:'right'});
+      y += rowH;
+    });
+
+    doc.setDrawColor(220,214,198); doc.line(left, y, right, y);
+    y += 8;
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20,20,20);
+    doc.text('TOTAL', colUnit, y, {align:'right'});
+    doc.text(money(total), colSub, y, {align:'right'});
+    y += 10;
+
+    if(quote.notas){
+      if(y > 260){ doc.addPage(); y = 20; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(140,90,50);
+      doc.text('NOTAS', left, y); y += 5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+      const noteLines = doc.splitTextToSize(quote.notas, right-left);
+      doc.text(noteLines, left, y);
+    }
+
+    const footY = 288;
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160,157,148);
+    doc.text('Orçamento gerado a ' + fmtDate(todayStr()), left, footY);
+
+    const safeClient = (client ? client.nome : 'cliente').replace(/[^a-z0-9]+/gi, '_');
+    doc.save(`${quote.numero}_${safeClient}.pdf`);
+  };
+
+  if(loading){
+    return <div className="loading">A carregar dados da equipa…</div>;
+  }
+
+  if(loginEnabled && !authed){
+    return <LoginScreen config={config} onLogin={doLogin} />;
+  }
+
+  const navItems = [
+    {id:'dashboard', label:'Resumo', count:null},
+    {id:'orcamentos', label:'Orçamentos', count:quotes.length},
+    {id:'encomendas', label:'Encomendas', count:orders.length},
+    {id:'compras', label:'Compras', count:purchases.length},
+    {id:'clientes', label:'Clientes', count:clients.length},
+  ];
+
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          {config.logo ? (
+            <img className="brand-logo" src={config.logo} alt={config.nomeEmpresa || 'Logótipo'} />
+          ) : (
+            <>
+              <RegMark/>
+              <div>
+                <div className="brand-title">{config.nomeEmpresa || 'GESTÃO DTF'}</div>
+                <div className="brand-sub">ORÇ · ENC · PAG</div>
+              </div>
+            </>
+          )}
+          <button className="brand-edit" title="Configurar empresa e logótipo" onClick={()=>setModal({type:'config', data:null})}>⚙</button>
+        </div>
+        <nav className="nav">
+          {navItems.map(n => (
+            <button key={n.id} className={"nav-item" + (view===n.id ? ' active':'')} onClick={()=>{setView(n.id); setSearch('');}}>
+              <span className="label">{n.label}</span>
+              {n.count!==null && <span className="nav-count">{n.count}</span>}
+            </button>
+          ))}
+          <button className="nav-item mobile-config-item" onClick={()=>setModal({type:'config', data:null})}>
+            <span className="label">Empresa</span>
+          </button>
+        </nav>
+        <div className="sidebar-foot">
+          {HAS_CLAUDE_STORAGE ? <>DADOS PARTILHADOS<br/>PELA EQUIPA</> : <>DADOS GUARDADOS<br/>NESTE APARELHO</>}
+          {loginEnabled && (
+            <div className="sidebar-user">
+              <span className="sidebar-user-name" onClick={renameCurrentUser} title="Mudar nome">{currentUser || 'sem nome'}</span>
+              <button className="sidebar-logout" onClick={doLogout}>Sair</button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <main className="main">
+        {view==='dashboard' && <Dashboard stats={stats} orders={orders} clients={clients} clientName={clientName} orderTotal={orderTotal} setView={setView} />}
+
+        {view==='orcamentos' && <ListView
+          title="Orçamentos" subtitle={`${quotes.length} orçamento${quotes.length!==1?'s':''}`}
+          onNew={()=>setModal({type:'orcamento', data:null})}
+          newLabel="+ Novo orçamento"
+          search={search} setSearch={setSearch}
+        >
+          <table>
+            <thead><tr><th>Número</th><th>Cliente</th><th>Data</th><th>Total</th><th>Estado</th><th>Por</th><th></th></tr></thead>
+            <tbody>
+              {filteredList(quotes, q=>q.numero+' '+clientName(q.clienteId)).length===0 && (
+                <tr className="empty-row"><td colSpan="7">Sem orçamentos ainda. Cria o primeiro com "+ Novo orçamento".</td></tr>
+              )}
+              {filteredList(quotes, q=>q.numero+' '+clientName(q.clienteId)).slice().reverse().map(q => {
+                const total = (q.itens||[]).reduce((s,i)=>s+(Number(i.quantidade)||0)*(Number(i.precoUnit)||0),0);
+                const st = ORC_STATUS[q.status]||ORC_STATUS.rascunho;
+                return (
+                  <tr key={q.id}>
+                    <td className="cell-num">{q.numero}</td>
+                    <td>{clientName(q.clienteId)}</td>
+                    <td>{fmtDate(q.data)}</td>
+                    <td className="cell-money">{money(total)}</td>
+                    <td><span className={"badge "+st.cls}>{st.label}</span></td>
+                    <td className="cell-by">{q.criadoPor || '—'}</td>
+                    <td>
+                      <div className="cell-actions">
+                        {q.status==='aprovado' && !orders.some(o=>o.orcamentoId===q.id) && (
+                          <button className="btn btn-ghost btn-sm" onClick={()=>convertToOrder(q)}>→ Encomenda</button>
+                        )}
+                        {q.status!=='aprovado' && (
+                          <button className="btn btn-ghost btn-sm" onClick={()=>convertToOrder(q)}>→ Encomenda</button>
+                        )}
+                        <button className="btn btn-ghost btn-sm" onClick={()=>exportQuotePdf(q)}>PDF</button>
+                        <button className="btn-icon" title="Editar" onClick={()=>setModal({type:'orcamento', data:q})}>✎</button>
+                        <button className="btn-icon btn-danger-text" title="Eliminar" onClick={()=>deleteQuote(q.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </ListView>}
+
+        {view==='encomendas' && <ListView
+          title="Encomendas" subtitle={`${orders.length} encomenda${orders.length!==1?'s':''}`}
+          onNew={()=>setModal({type:'encomenda', data:null})}
+          newLabel="+ Nova encomenda"
+          search={search} setSearch={setSearch}
+        >
+          <table>
+            <thead><tr><th>Número</th><th>Cliente</th><th>Total</th><th>Pagamento</th><th>Produção</th><th>Por</th><th></th></tr></thead>
+            <tbody>
+              {filteredList(orders, o=>o.numero+' '+clientName(o.clienteId)).length===0 && (
+                <tr className="empty-row"><td colSpan="7">Sem encomendas ainda. Cria uma nova ou converte um orçamento aprovado.</td></tr>
+              )}
+              {filteredList(orders, o=>o.numero+' '+clientName(o.clienteId)).slice().reverse().map(o => {
+                const total = orderTotal(o);
+                const pagStatus = o.pagamento === 'pago' ? 'pago' : 'pendente';
+                return (
+                  <tr key={o.id}>
+                    <td className="cell-num">{o.numero}</td>
+                    <td>{clientName(o.clienteId)}</td>
+                    <td className="cell-money">{money(total)}</td>
+                    <td>
+                      <select className="status-select" value={pagStatus} onChange={e=>setOrderPagamento(o.id, e.target.value)}>
+                        {Object.entries(PAGAMENTO_STATUS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <select className="status-select" value={o.status} onChange={e=>setOrderStatus(o.id, e.target.value)}>
+                        {Object.entries(ENC_STATUS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </td>
+                    <td className="cell-by">{o.criadoPor || '—'}</td>
+                    <td>
+                      <div className="cell-actions">
+                        <button className="btn-icon" title="Editar" onClick={()=>setModal({type:'encomenda', data:o})}>✎</button>
+                        <button className="btn-icon btn-danger-text" title="Eliminar" onClick={()=>deleteOrder(o.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </ListView>}
+
+        {view==='compras' && <ListView
+          title="Compras" subtitle={`${purchases.length} compra${purchases.length!==1?'s':''} a fornecedores`}
+          onNew={()=>setModal({type:'compra', data:null})}
+          newLabel="+ Nova compra"
+          search={search} setSearch={setSearch}
+          beforeTable={<CatalogPanels catalog={catalog} onImport={(categoria)=>setModal({type:'importar-catalogo', data:{categoria}})} onDeleteItem={deleteCatalogItem} />}
+        >
+          <table>
+            <thead><tr><th>Número</th><th>Categoria</th><th>Fornecedor</th><th>Qtd</th><th>Valor</th><th>Data</th><th>Estado</th><th>Por</th><th></th></tr></thead>
+            <tbody>
+              {filteredList(purchases, c=>c.numero+' '+c.fornecedor+' '+c.categoria).length===0 && (
+                <tr className="empty-row"><td colSpan="9">Sem compras registadas ainda.</td></tr>
+              )}
+              {filteredList(purchases, c=>c.numero+' '+c.fornecedor+' '+c.categoria).slice().reverse().map(c => {
+                const st = COMPRA_ESTADO[c.estado]||COMPRA_ESTADO.pendente;
+                return (
+                  <tr key={c.id}>
+                    <td className="cell-num">{c.numero}</td>
+                    <td>{c.categoria}</td>
+                    <td>{c.fornecedor}</td>
+                    <td>{c.quantidade || '—'}</td>
+                    <td className="cell-money">{money(c.valor)}</td>
+                    <td>{fmtDate(c.data)}</td>
+                    <td><span className={"badge "+st.cls}>{st.label}</span></td>
+                    <td className="cell-by">{c.criadoPor || '—'}</td>
+                    <td>
+                      <div className="cell-actions">
+                        <button className="btn-icon" title="Editar" onClick={()=>setModal({type:'compra', data:c})}>✎</button>
+                        <button className="btn-icon btn-danger-text" title="Eliminar" onClick={()=>deletePurchase(c.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </ListView>}
+
+        {view==='clientes' && <ListView
+          title="Clientes" subtitle={`${clients.length} cliente${clients.length!==1?'s':''}`}
+          onNew={()=>setModal({type:'cliente', data:null})}
+          newLabel="+ Novo cliente"
+          search={search} setSearch={setSearch}
+          searchPlaceholder="Pesquisar por nome, contacto, telefone, email ou NIF…"
+        >
+          <table>
+            <thead><tr><th>Nome</th><th>Contacto</th><th>Telefone</th><th>Email</th><th></th></tr></thead>
+            <tbody>
+              {(() => {
+                const results = filteredList(clients, c => [c.nome, c.contacto, c.telefone, c.email, c.nif].filter(Boolean).join(' '))
+                  .slice().sort((a,b) => a.nome.localeCompare(b.nome, 'pt-PT', {sensitivity:'base'}));
+                if(results.length === 0){
+                  return (
+                    <tr className="empty-row">
+                      <td colSpan="5">{clients.length===0 ? 'Sem clientes ainda.' : `Nenhum cliente encontrado para "${search}".`}</td>
+                    </tr>
+                  );
+                }
+                return results.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.nome}</td>
+                    <td>{c.contacto||'—'}</td>
+                    <td>{c.telefone||'—'}</td>
+                    <td>{c.email||'—'}</td>
+                    <td>
+                      <div className="cell-actions">
+                        <button className="btn-icon" title="Editar" onClick={()=>setModal({type:'cliente', data:c})}>✎</button>
+                        <button className="btn-icon btn-danger-text" title="Eliminar" onClick={()=>deleteClient(c.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </ListView>}
+      </main>
+
+      {modal && modal.type==='cliente' && <ClientModal data={modal.data} onClose={()=>setModal(null)} onSave={saveClient} />}
+      {modal && modal.type==='orcamento' && <QuoteModal data={modal.data} clients={clients} catalog={catalog} onClose={()=>setModal(null)} onSave={saveQuote} onQuickClient={saveClient} />}
+      {modal && modal.type==='encomenda' && <OrderModal data={modal.data} clients={clients} catalog={catalog} onClose={()=>setModal(null)} onSave={saveOrder} onQuickClient={saveClient} />}
+      {modal && modal.type==='config' && <ConfigModal config={config} onClose={()=>setModal(null)} onSave={(next)=>{saveConfig(next); setModal(null); showToast('Dados da empresa guardados');}} onExport={exportAllData} onImport={importAllData} />}
+      {modal && modal.type==='compra' && <PurchaseModal data={modal.data} catalog={catalog} onClose={()=>setModal(null)} onSave={savePurchase} />}
+      {modal && modal.type==='importar-catalogo' && <ImportCatalogModal categoria={modal.data && modal.data.categoria} onClose={()=>setModal(null)} onImport={importCatalogItems} />}
+
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+function Dashboard({stats, orders, clients, clientName, orderTotal, setView}){
+  const emProducao = orders.filter(o=>o.status==='producao'||o.status==='fila').slice().reverse().slice(0,6);
+  return (
+    <div className="content">
+      <div className="section-head">
+        <div className="section-title"><RegMark/> Resumo</div>
+      </div>
+      <div className="stats">
+        <div className="stat-card"><RegMark color1="#3b6ea5" color2="#3b6ea5"/><div className="stat-label">Orçamentos por fechar</div><div className="stat-value">{stats.orcPendentes}</div></div>
+        <div className="stat-card"><RegMark color1="#c98a1a" color2="#c98a1a"/><div className="stat-label">Encomendas em curso</div><div className="stat-value orange">{stats.encProducao}</div></div>
+        <div className="stat-card"><RegMark color1="#c1443a" color2="#c1443a"/><div className="stat-label">Por cobrar</div><div className="stat-value red">{money(stats.porCobrar)}</div></div>
+        <div className="stat-card"><RegMark color1="#3f8f52" color2="#3f8f52"/><div className="stat-label">Recebido este mês</div><div className="stat-value green">{money(stats.receitaMes)}</div></div>
+        <div className="stat-card"><RegMark color1="#d9541f" color2="#d9541f"/><div className="stat-label">Despesas este mês</div><div className="stat-value orange">{money(stats.despesasMes)}</div></div>
+        <div className="stat-card"><RegMark color1={stats.lucroMes>=0 ? "#3f8f52" : "#c1443a"} color2={stats.lucroMes>=0 ? "#3f8f52" : "#c1443a"}/><div className="stat-label">Lucro líquido do mês</div><div className={"stat-value "+(stats.lucroMes>=0 ? "green" : "red")}>{money(stats.lucroMes)}</div></div>
+      </div>
+
+      <div className="section-head"><div className="section-title">Em fila e em produção</div>
+        <button className="btn btn-ghost btn-sm" onClick={()=>setView('encomendas')}>Ver todas as encomendas</button>
+      </div>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>Número</th><th>Cliente</th><th>Total</th><th>Pagamento</th><th>Estado</th></tr></thead>
+          <tbody>
+            {emProducao.length===0 && <tr className="empty-row"><td colSpan="5">Nada em fila ou em produção neste momento.</td></tr>}
+            {emProducao.map(o => {
+              const st = ENC_STATUS[o.status];
+              const pst = PAGAMENTO_STATUS[o.pagamento==='pago' ? 'pago' : 'pendente'];
+              return (
+                <tr key={o.id}>
+                  <td className="cell-num">{o.numero}</td>
+                  <td>{clientName(o.clienteId)}</td>
+                  <td className="cell-money">{money(orderTotal(o))}</td>
+                  <td><span className={"badge "+pst.cls}>{pst.label}</span></td>
+                  <td><span className={"badge "+st.cls}>{st.label}</span></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ListView({title, subtitle, onNew, newLabel, search, setSearch, searchPlaceholder, beforeTable, children}){
+  return (
+    <>
+      <div className="topbar">
+        <div className="topbar-left">
+          <div>
+            <div className="page-title">{title}</div>
+            <div className="page-sub">{subtitle}</div>
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={onNew}>{newLabel}</button>
+      </div>
+      <div className="content">
+        {beforeTable}
+        <div className="section-head">
+          <input className="search" placeholder={searchPlaceholder || "Pesquisar…"} value={search} onChange={e=>setSearch(e.target.value)} />
+        </div>
+        <div className="table-wrap">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function Modal({title, onClose, children, footer}){
+  return (
+    <div className="overlay" onMouseDown={(e)=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <div className="modal-title">{title}</div>
+          <button className="btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">{children}</div>
+        <div className="modal-foot">{footer}</div>
+      </div>
+    </div>
+  );
+}
+
+function ClientModal({data, onClose, onSave}){
+  const [f, setF] = useState(data || {nome:'', contacto:'', telefone:'', email:'', nif:''});
+  const upd = (k,v) => setF({...f, [k]:v});
+  return (
+    <Modal title={data ? 'Editar cliente' : 'Novo cliente'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={!f.nome.trim()} onClick={()=>onSave(f)}>Guardar</button>
+      </>}>
+      <div className="field"><label>Nome / Empresa</label><input value={f.nome} onChange={e=>upd('nome', e.target.value)} placeholder="Nome do cliente" autoFocus/></div>
+      <div className="field-row">
+        <div className="field"><label>Pessoa de contacto</label><input value={f.contacto} onChange={e=>upd('contacto', e.target.value)} /></div>
+        <div className="field"><label>Telefone</label><input value={f.telefone} onChange={e=>upd('telefone', e.target.value)} /></div>
+      </div>
+      <div className="field-row">
+        <div className="field"><label>Email</label><input value={f.email} onChange={e=>upd('email', e.target.value)} /></div>
+        <div className="field"><label>NIF</label><input value={f.nif} onChange={e=>upd('nif', e.target.value)} /></div>
+      </div>
+    </Modal>
+  );
+}
+
+function ClientSearchSelect({clients, value, onChange}){
+  const initial = () => { const c = clients.find(c=>c.id===value); return c ? c.nome : ''; };
+  const [query, setQuery] = useState(initial);
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => { if(wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const matches = q === '' ? clients : clients.filter(c =>
+    [c.nome, c.contacto, c.telefone, c.email, c.nif].filter(Boolean).join(' ').toLowerCase().includes(q)
+  );
+  const sorted = matches.slice().sort((a,b) => a.nome.localeCompare(b.nome, 'pt-PT', {sensitivity:'base'}));
+
+  const pick = (c) => { onChange(c.id); setQuery(c.nome); setOpen(false); };
+  const handleType = (val) => {
+    setQuery(val);
+    setOpen(true);
+    if(value) onChange('');
+  };
+
+  return (
+    <div className="client-picker" ref={wrapRef}>
+      <input
+        value={query}
+        onChange={e => handleType(e.target.value)}
+        onFocus={() => setOpen(true)}
+        placeholder="Pesquisar cliente por nome, telefone, email ou NIF…"
+      />
+      {open && (
+        <div className="client-picker-list">
+          {sorted.length === 0 && <div className="client-picker-empty">Nenhum cliente encontrado.</div>}
+          {sorted.slice(0, 50).map(c => (
+            <div key={c.id} className={"client-picker-item" + (c.id===value ? ' active' : '')} onClick={() => pick(c)}>
+              <div className="client-picker-name">{c.nome}</div>
+              {(c.telefone || c.email) && <div className="client-picker-sub">{[c.telefone, c.email].filter(Boolean).join(' · ')}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ItemsEditor({itens, setItens, catalog}){
+  const upd = (idx, k, v) => { const next = itens.slice(); next[idx] = {...next[idx], [k]:v}; setItens(next); };
+  const remove = (idx) => setItens(itens.filter((_,i)=>i!==idx));
+  const add = () => setItens([...itens, {descricao:'', quantidade:1, precoUnit:0}]);
+  const addFromCatalog = (id) => {
+    const p = (catalog||[]).find(c=>c.id===id);
+    if(!p) return;
+    const descricao = [p.item, p.modelos].filter(Boolean).join(' — ') + (p.referencia ? ` (ref. ${p.referencia})` : '');
+    setItens([...itens, {descricao, quantidade:1, precoUnit:p.valorUnitario||0}]);
+  };
+  const total = itens.reduce((s,i)=>s+(Number(i.quantidade)||0)*(Number(i.precoUnit)||0),0);
+  return (
+    <div className="field">
+      <label>Peças / serviços (transfer DTF)</label>
+      <div className="items-block">
+        {catalog && catalog.length>0 && (
+          <select className="catalog-add-select" defaultValue="" onChange={e=>{ if(e.target.value) addFromCatalog(e.target.value); e.target.value=''; }}>
+            <option value="">+ Adicionar produto do catálogo…</option>
+            {COMPRA_CATEGORIAS.map(cat => {
+              const items = catalog.filter(c=>c.categoria===cat);
+              if(items.length===0) return null;
+              return (
+                <optgroup key={cat} label={cat}>
+                  {items.map(p => (
+                    <option key={p.id} value={p.id}>{[p.item, p.modelos].filter(Boolean).join(' — ')} · {money(p.valorUnitario||0)}</option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </select>
+        )}
+        {itens.map((it, idx) => (
+          <div className="item-row" key={idx}>
+            <input placeholder="Ex: T-shirt A4 costas + peito" value={it.descricao} onChange={e=>upd(idx,'descricao',e.target.value)} />
+            <div className="item-row-meta">
+              <input type="number" min="0" placeholder="Qtd" value={it.quantidade} onChange={e=>upd(idx,'quantidade',e.target.value)} />
+              <input type="number" min="0" step="0.01" placeholder="Preço un." value={it.precoUnit} onChange={e=>upd(idx,'precoUnit',e.target.value)} />
+              <div className="item-sub">{money((Number(it.quantidade)||0)*(Number(it.precoUnit)||0))}</div>
+              <button className="item-remove" onClick={()=>remove(idx)} title="Remover">✕</button>
+            </div>
+          </div>
+        ))}
+        <button className="add-item-btn" onClick={add}>+ Adicionar peça em branco</button>
+        <div className="items-total"><span className="label">Total</span><span className="val">{money(total)}</span></div>
+      </div>
+    </div>
+  );
+}
+
+function QuoteModal({data, clients, catalog, onClose, onSave, onQuickClient}){
+  const [f, setF] = useState(data || {clienteId:'', data:todayStr(), validade:'', itens:[{descricao:'', quantidade:1, precoUnit:0}], notas:'', status:'rascunho'});
+  const upd = (k,v) => setF({...f, [k]:v});
+  const canSave = f.clienteId && f.itens.some(i=>i.descricao.trim());
+  return (
+    <Modal title={data ? `Editar ${data.numero}` : 'Novo orçamento'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={!canSave} onClick={()=>onSave(f)}>Guardar orçamento</button>
+      </>}>
+      <div className="field-row">
+        <div className="field">
+          <label>Cliente</label>
+          <ClientSearchSelect clients={clients} value={f.clienteId} onChange={id=>upd('clienteId', id)} />
+        </div>
+        <div className="field">
+          <label>Estado</label>
+          <select value={f.status} onChange={e=>upd('status', e.target.value)}>
+            {Object.entries(ORC_STATUS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+      </div>
+      {clients.length===0 && <div className="hint">Ainda não tens clientes. Cria um em "Clientes" antes de fazer o orçamento.</div>}
+      <div className="field-row">
+        <div className="field"><label>Data</label><input type="date" value={f.data} onChange={e=>upd('data', e.target.value)} /></div>
+        <div className="field"><label>Válido até</label><input type="date" value={f.validade} onChange={e=>upd('validade', e.target.value)} /></div>
+      </div>
+      <ItemsEditor itens={f.itens} setItens={(i)=>upd('itens', i)} catalog={catalog} />
+      <div className="field"><label>Notas</label><textarea value={f.notas} onChange={e=>upd('notas', e.target.value)} placeholder="Ex: cores, tipo de tecido, prazos de produção…" /></div>
+    </Modal>
+  );
+}
+
+function OrderModal({data, clients, catalog, onClose, onSave, onQuickClient}){
+  const [f, setF] = useState(data || {clienteId:'', orcamentoId:null, itens:[{descricao:'', quantidade:1, precoUnit:0}], notas:'', status:'fila', pagamento:'pendente', dataPagamento:''});
+  const upd = (k,v) => setF({...f, [k]:v});
+  const updPagamento = (pagamento) => setF({...f, pagamento, dataPagamento: pagamento==='pago' ? (f.dataPagamento || todayStr()) : ''});
+  const canSave = f.clienteId && f.itens.some(i=>i.descricao.trim());
+  return (
+    <Modal title={data ? `Editar ${data.numero}` : 'Nova encomenda'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={!canSave} onClick={()=>onSave(f)}>Guardar encomenda</button>
+      </>}>
+      <div className="field-row">
+        <div className="field">
+          <label>Cliente</label>
+          <ClientSearchSelect clients={clients} value={f.clienteId} onChange={id=>upd('clienteId', id)} />
+        </div>
+        <div className="field">
+          <label>Estado de produção</label>
+          <select value={f.status} onChange={e=>upd('status', e.target.value)}>
+            {Object.entries(ENC_STATUS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+      </div>
+      {clients.length===0 && <div className="hint">Ainda não tens clientes. Cria um em "Clientes" antes de criar a encomenda.</div>}
+      <div className="field">
+        <label>Pagamento</label>
+        <select value={f.pagamento==='pago' ? 'pago' : 'pendente'} onChange={e=>updPagamento(e.target.value)}>
+          {Object.entries(PAGAMENTO_STATUS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+      </div>
+      <ItemsEditor itens={f.itens} setItens={(i)=>upd('itens', i)} catalog={catalog} />
+      <div className="field"><label>Notas de produção</label><textarea value={f.notas} onChange={e=>upd('notas', e.target.value)} placeholder="Ex: ficheiro de arte, posição da estampa, temperatura/tempo de prensa…" /></div>
+    </Modal>
+  );
+}
+
+function resizeImageFile(file, maxDim=360){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          const scale = maxDim / Math.max(w,h);
+          w = Math.round(w*scale); h = Math.round(h*scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const isPng = file.type === 'image/png';
+        const dataUrl = canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.92);
+        resolve({dataUrl, w, h});
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function PurchaseModal({data, catalog, onClose, onSave}){
+  const [f, setF] = useState(data || {categoria:COMPRA_CATEGORIAS[0], fornecedor:'', referencia:'', descricao:'', quantidade:1, valorUnitario:'', data:todayStr(), estado:'pendente', notas:''});
+  const upd = (k,v) => setF({...f, [k]:v});
+  const total = (Number(f.quantidade)||0) * (Number(f.valorUnitario)||0);
+  const canSave = f.fornecedor.trim() && total > 0;
+
+  const catalogForCategoria = (catalog||[]).filter(c => c.categoria === f.categoria);
+
+  const applyCatalogItem = (id) => {
+    const item = catalogForCategoria.find(c=>c.id===id);
+    if(!item) return;
+    setF({
+      ...f,
+      referencia: item.referencia || '',
+      descricao: [item.item, item.modelos].filter(Boolean).join(' — '),
+      valorUnitario: item.valorUnitario || '',
+      fornecedor: f.fornecedor || item.fornecedor || '',
+    });
+  };
+
+  const changeCategoria = (categoria) => setF({...f, categoria});
+
+  return (
+    <Modal title={data ? `Editar ${data.numero}` : 'Nova compra'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={!canSave} onClick={()=>onSave({...f, valor: total})}>Guardar compra</button>
+      </>}>
+      <div className="field">
+        <label>Categoria</label>
+        <select value={f.categoria} onChange={e=>changeCategoria(e.target.value)}>
+          {COMPRA_CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+      </div>
+
+      {catalogForCategoria.length > 0 && (
+        <div className="field">
+          <label>Produto do catálogo (opcional)</label>
+          <select defaultValue="" onChange={e=>{ if(e.target.value) applyCatalogItem(e.target.value); e.target.value=''; }}>
+            <option value="">Escolher para preencher automaticamente…</option>
+            {catalogForCategoria.map(c => (
+              <option key={c.id} value={c.id}>
+                {[c.item, c.modelos].filter(Boolean).join(' — ')} · {money(c.valorUnitario||0)}{c.referencia ? ' · ref. '+c.referencia : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="field"><label>Fornecedor</label><input value={f.fornecedor} onChange={e=>upd('fornecedor', e.target.value)} placeholder="Nome do fornecedor" autoFocus/></div>
+      <div className="field"><label>Descrição do produto</label><input value={f.descricao} onChange={e=>upd('descricao', e.target.value)} placeholder="Ex: T-shirt branca algodão, M/L" /></div>
+
+      <div className="field-row">
+        <div className="field"><label>Quantidade</label><input type="number" min="0" step="1" value={f.quantidade} onChange={e=>upd('quantidade', e.target.value)} /></div>
+        <div className="field"><label>Valor unitário</label><input type="number" min="0" step="0.01" value={f.valorUnitario} onChange={e=>upd('valorUnitario', e.target.value)} /></div>
+      </div>
+      <div className="hint">Valor total: <strong>{money(total)}</strong></div>
+
+      <div className="field-row">
+        <div className="field"><label>Data</label><input type="date" value={f.data} onChange={e=>upd('data', e.target.value)} /></div>
+        <div className="field">
+          <label>Estado</label>
+          <select value={f.estado} onChange={e=>upd('estado', e.target.value)}>
+            {Object.entries(COMPRA_ESTADO).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="field"><label>Notas</label><textarea value={f.notas} onChange={e=>upd('notas', e.target.value)} placeholder="Opcional" /></div>
+    </Modal>
+  );
+}
+
+function CatalogPanels({catalog, onImport, onDeleteItem}){
+  return (
+    <div className="catalog-panels">
+      {COMPRA_CATEGORIAS.map(cat => (
+        <CatalogCategoryPanel key={cat} categoria={cat} catalog={catalog.filter(c=>c.categoria===cat)} onImport={()=>onImport(cat)} onDeleteItem={onDeleteItem} />
+      ))}
+    </div>
+  );
+}
+
+function CatalogCategoryPanel({categoria, catalog, onImport, onDeleteItem}){
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="catalog-panel">
+      <div className="catalog-head" onClick={()=>setOpen(!open)}>
+        <RegMark color1="#177a7c" color2="#177a7c"/>
+        <div className="catalog-title">{categoria}<span className="catalog-count">{catalog.length}</span></div>
+        <button className="btn btn-ghost btn-sm catalog-import-btn" onClick={(e)=>{e.stopPropagation(); onImport();}}>+ Importar Excel</button>
+        <span className={"catalog-chevron"+(open?' open':'')}>▾</span>
+      </div>
+      {open && (
+        <div className="catalog-list">
+          {catalog.length===0 && <div className="catalog-empty">Ainda não importaste produtos de "{categoria}". Usa "+ Importar Excel" para carregar o ficheiro do fornecedor (.xlsx, .xls ou .csv).</div>}
+          {catalog.map(c => (
+            <div className="catalog-row" key={c.id}>
+              <span className="catalog-row-ref">{c.referencia || '—'}</span>
+              <span className="catalog-row-name">{[c.item, c.modelos].filter(Boolean).join(' — ')}</span>
+              {c.fornecedor && <span className="catalog-row-supplier">{c.fornecedor}</span>}
+              <span className="catalog-row-price">{money(c.valorUnitario||0)}</span>
+              <button className="btn-icon btn-danger-text" title="Remover" onClick={()=>onDeleteItem(c.id)}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function parseMoneyLoose(v){
+  if(typeof v === 'number') return v;
+  if(v===null || v===undefined) return 0;
+  let s = String(v).trim();
+  if(!s) return 0;
+  s = s.replace(/[^\d,.\-]/g, '');
+  if(s.includes(',') && s.includes('.')){
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if(s.includes(',')){
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function guessColumn(headerRow, keywords){
+  if(!headerRow) return -1;
+  for(let i=0; i<headerRow.length; i++){
+    const h = String(headerRow[i]||'').toLowerCase();
+    if(keywords.some(k => h.includes(k))) return i;
+  }
+  return -1;
+}
+
+function ImportCatalogModal({categoria, onClose, onImport}){
+  const [step, setStep] = useState('upload'); // upload | map
+  const [error, setError] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [sheetNames, setSheetNames] = useState([]);
+  const [activeSheet, setActiveSheet] = useState(0);
+  const [workbook, setWorkbook] = useState(null);
+  const [rawRows, setRawRows] = useState([]);
+  const [hasHeader, setHasHeader] = useState(true);
+  const [colReferencia, setColReferencia] = useState(-1);
+  const [colItem, setColItem] = useState(0);
+  const [colModelos, setColModelos] = useState(-1);
+  const [colValor, setColValor] = useState(1);
+  const [fornecedor, setFornecedor] = useState('');
+
+  const loadSheet = (wb, sheetIdx) => {
+    const ws = wb.Sheets[wb.SheetNames[sheetIdx]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''}).filter(r => r.some(cell => String(cell).trim() !== ''));
+    setRawRows(rows);
+    const headerRow = rows[0];
+    setColReferencia(guessColumn(headerRow, ['refer','ref.','ref ','código','codigo','sku']));
+    setColItem(Math.max(0, guessColumn(headerRow, ['item','produto','descri','artigo','designa','nome'])));
+    setColModelos(guessColumn(headerRow, ['modelo','tamanho','cor','variante']));
+    const vCol = guessColumn(headerRow, ['valor unit','preç','preco','pvp','custo','valor']);
+    setColValor(vCol >= 0 ? vCol : 1);
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    setError('');
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onerror = () => setError('Não foi possível ler este ficheiro.');
+    reader.onload = (ev) => {
+      try{
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        setWorkbook(wb);
+        setSheetNames(wb.SheetNames);
+        setActiveSheet(0);
+        loadSheet(wb, 0);
+        setStep('map');
+      }catch(err){
+        console.error(err);
+        setError('Não consegui ler este ficheiro. Confirma que é um .xlsx, .xls ou .csv válido.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const changeSheet = (idx) => {
+    setActiveSheet(idx);
+    loadSheet(workbook, idx);
+  };
+
+  const numCols = rawRows.reduce((m,r) => Math.max(m, r.length), 1);
+  const headerRow = hasHeader ? rawRows[0] : null;
+  const dataRows = hasHeader ? rawRows.slice(1) : rawRows;
+  const colLabel = (i) => headerRow && headerRow[i] ? `${String.fromCharCode(65+i)} · ${headerRow[i]}` : `Coluna ${String.fromCharCode(65+i)}`;
+  const colOptions = (extra) => (
+    <>
+      <option value="-1">{extra || '(não usar)'}</option>
+      {Array.from({length:numCols}).map((_,i) => <option key={i} value={i}>{colLabel(i)}</option>)}
+    </>
+  );
+
+  const mapRow = (row) => ({
+    categoria,
+    referencia: colReferencia >= 0 ? String(row[colReferencia] || '').trim() : '',
+    item: String(row[colItem] || '').trim(),
+    modelos: colModelos >= 0 ? String(row[colModelos] || '').trim() : '',
+    valorUnitario: parseMoneyLoose(row[colValor]),
+    fornecedor: fornecedor.trim(),
+  });
+
+  const previewItems = dataRows.slice(0, 6).map(mapRow);
+  const allItems = dataRows.map(mapRow).filter(it => it.item && it.valorUnitario > 0);
+
+  return (
+    <Modal title={`Importar Excel — ${categoria}`} onClose={onClose}
+      footer={step==='map' ? <>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={allItems.length===0} onClick={()=>onImport(allItems)}>
+          Importar {allItems.length} produto{allItems.length!==1?'s':''}
+        </button>
+      </> : <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>}>
+
+      {step==='upload' && (
+        <>
+          <div className="hint">Categoria: <strong>{categoria}</strong></div>
+          <label className="import-drop">
+            <div className="big">Clica para escolher o ficheiro do fornecedor</div>
+            <div className="small">.xlsx, .xls ou .csv</div>
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} />
+          </label>
+          {error && <div className="hint" style={{color:'var(--red)'}}>{error}</div>}
+        </>
+      )}
+
+      {step==='map' && (
+        <>
+          <div className="hint">Ficheiro: <strong>{fileName}</strong> · {dataRows.length} linha{dataRows.length!==1?'s':''} de dados · Categoria: <strong>{categoria}</strong></div>
+
+          {sheetNames.length > 1 && (
+            <div className="field">
+              <label>Folha</label>
+              <select value={activeSheet} onChange={e=>changeSheet(Number(e.target.value))}>
+                {sheetNames.map((n,i) => <option key={n} value={i}>{n}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div className="field">
+            <label><input type="checkbox" checked={hasHeader} onChange={e=>setHasHeader(e.target.checked)} style={{width:'auto', marginRight:'6px'}}/> A primeira linha tem cabeçalhos</label>
+          </div>
+
+          <div className="field-row">
+            <div className="field">
+              <label>Coluna da referência</label>
+              <select value={colReferencia} onChange={e=>setColReferencia(Number(e.target.value))}>
+                {colOptions()}
+              </select>
+            </div>
+            <div className="field">
+              <label>Coluna do item</label>
+              <select value={colItem} onChange={e=>setColItem(Number(e.target.value))}>
+                {Array.from({length:numCols}).map((_,i) => <option key={i} value={i}>{colLabel(i)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="field-row">
+            <div className="field">
+              <label>Coluna dos modelos</label>
+              <select value={colModelos} onChange={e=>setColModelos(Number(e.target.value))}>
+                {colOptions()}
+              </select>
+            </div>
+            <div className="field">
+              <label>Coluna do valor unitário</label>
+              <select value={colValor} onChange={e=>setColValor(Number(e.target.value))}>
+                {Array.from({length:numCols}).map((_,i) => <option key={i} value={i}>{colLabel(i)}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="field"><label>Fornecedor (aplicado a todos os itens importados)</label><input value={fornecedor} onChange={e=>setFornecedor(e.target.value)} placeholder="Opcional" /></div>
+
+          <div className="field">
+            <label>Pré-visualização</label>
+            <div className="import-preview">
+              <table>
+                <thead><tr><th>Referência</th><th>Item</th><th>Modelos</th><th>Valor unit.</th></tr></thead>
+                <tbody>
+                  {previewItems.map((it,i) => (
+                    <tr key={i}><td>{it.referencia || '—'}</td><td>{it.item || '—'}</td><td>{it.modelos || '—'}</td><td>{money(it.valorUnitario)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="import-count">{allItems.length} produto{allItems.length!==1?'s':''} válido{allItems.length!==1?'s':''} para importar (linhas sem item ou sem valor são ignoradas).</div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+function ConfigModal({config, onClose, onSave, onExport, onImport}){
+  const [f, setF] = useState({loginUsername:'', loginPassword:'', ...config});
+  const [busy, setBusy] = useState(false);
+  const upd = (k,v) => setF({...f, [k]:v});
+
+  const handleFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    setBusy(true);
+    try{
+      const {dataUrl, w, h} = await resizeImageFile(file);
+      setF({...f, logo:dataUrl, logoW:w, logoH:h});
+    }catch(err){ console.error(err); }
+    setBusy(false);
+  };
+
+  return (
+    <Modal title="Empresa e logótipo" onClose={onClose}
+      footer={<>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" onClick={()=>onSave(f)}>Guardar</button>
+      </>}>
+      <div className="field">
+        <label>Logótipo</label>
+        <label className="logo-upload">
+          {f.logo ? <img src={f.logo} alt="Logótipo" /> : <span className="placeholder">{busy ? 'A processar imagem…' : 'Clica para escolher uma imagem (PNG ou JPG)'}</span>}
+          <input type="file" accept="image/png,image/jpeg" style={{display:'none'}} onChange={handleFile} />
+        </label>
+        {f.logo && <button className="logo-remove" onClick={()=>setF({...f, logo:null, logoW:0, logoH:0})}>Remover logótipo</button>}
+      </div>
+      <div className="field"><label>Nome da empresa</label><input value={f.nomeEmpresa} onChange={e=>upd('nomeEmpresa', e.target.value)} placeholder="Ex: Estampa Norte, Lda." /></div>
+      <div className="field"><label>Morada</label><input value={f.morada} onChange={e=>upd('morada', e.target.value)} /></div>
+      <div className="field-row">
+        <div className="field"><label>Telefone</label><input value={f.telefone} onChange={e=>upd('telefone', e.target.value)} /></div>
+        <div className="field"><label>Email</label><input value={f.email} onChange={e=>upd('email', e.target.value)} /></div>
+      </div>
+      <div className="field"><label>NIF</label><input value={f.nif} onChange={e=>upd('nif', e.target.value)} /></div>
+      <div className="hint">Estes dados e o logótipo aparecem no cabeçalho dos orçamentos exportados em PDF, e são partilhados por toda a equipa.</div>
+
+      <div className="field-row">
+        <div className="field"><label>Utilizador de acesso</label><input value={f.loginUsername} onChange={e=>upd('loginUsername', e.target.value)} placeholder="Ex: estampagem" /></div>
+        <div className="field"><label>Password de acesso</label><input value={f.loginPassword} onChange={e=>upd('loginPassword', e.target.value)} placeholder="Ex: dtf2026" /></div>
+      </div>
+      <div className="hint">Preenche os dois campos para pedir login antes de entrar na app (um só utilizador/password para toda a equipa). Deixa em branco para não pedir login. Não é uma proteção à prova de bala — serve para evitar acessos casuais, não dados verdadeiramente sensíveis.</div>
+
+      <div className="backup-section">
+        <label>Cópia de segurança e transferência de dados</label>
+        <div className="backup-actions">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onExport}>⬇ Exportar dados (.json)</button>
+          <label className="btn btn-ghost btn-sm backup-import-btn">
+            ⬆ Importar dados (.json)
+            <input type="file" accept="application/json,.json" style={{display:'none'}} onChange={e=>{ const file=e.target.files&&e.target.files[0]; if(file) onImport(file); e.target.value=''; }} />
+          </label>
+        </div>
+        <div className="hint">Exportar cria um ficheiro com clientes, orçamentos, encomendas, compras e catálogo (sem a password de acesso). Usa para criar uma cópia de segurança, ou para levar os dados para outro computador — por exemplo da versão instalada fora do Claude (PWA). Importar substitui todos os dados atuais pelos do ficheiro.</div>
+      </div>
+    </Modal>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
